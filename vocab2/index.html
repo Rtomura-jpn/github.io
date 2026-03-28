@@ -185,9 +185,19 @@
         .word-field.hidden {
             background: #f8f9fa;
             border: 2px dashed #dee2e6;
+            font-size: 14px;
+            font-weight: normal;
+            color: transparent;  /* 実テキストを隠す */
+            position: relative;
+        }
+        .word-field.hidden::after {
+            content: 'タップして表示';
+            position: absolute;
             color: #6c757d;
             font-size: 14px;
             font-weight: normal;
+            font-style: normal;
+            font-family: 'Noto Sans JP', 'Hiragino Sans', 'Yu Gothic', sans-serif;
         }
 
         .word-field.hidden:hover {
@@ -379,15 +389,15 @@
                     <div class="word-content">
                         <div class="word-field chinese ${hiddenFields.includes('chinese') ? 'hidden' : ''}" 
                              lang="zh" data-field="chinese" data-index="${index}">
-                            ${hiddenFields.includes('chinese') ? 'タップして表示' : word[0]}
+                            ${word[0]}
                         </div>
                         <div class="word-field pinyin ${hiddenFields.includes('pinyin') ? 'hidden' : ''}" 
                              lang="zh" data-field="pinyin" data-index="${index}">
-                            ${hiddenFields.includes('pinyin') ? 'タップして表示' : word[1]}
+                            ${word[1]}
                         </div>
                         <div class="word-field meaning ${hiddenFields.includes('meaning') ? 'hidden' : ''}" 
                              lang="ja" data-field="meaning" data-index="${index}">
-                            ${hiddenFields.includes('meaning') ? 'タップして表示' : word[2]}
+                            ${word[2]}
                         </div>
                     </div>
                     <button class="example-btn" onclick="toggleExample(${currentLesson}, ${index})">例文を表示</button>
@@ -399,16 +409,22 @@
                 wordList.appendChild(wordItem);
             });
 
-            // 単語フィールドのクリックイベント
+            // 単語フィールドのクリックイベント（トグル・長押し除外）
             document.querySelectorAll('.word-field').forEach(field => {
+                let pressStart = 0;
+
+                field.addEventListener('pointerdown', function() {
+                    pressStart = Date.now();
+                });
+
                 field.addEventListener('click', function() {
-                    const fieldType = this.dataset.field;
-                    const index = this.dataset.index;
-                    
+                    // 300ms以上押していたら長押しとみなしてトグルしない
+                    if (Date.now() - pressStart > 300) return;
+
                     if (this.classList.contains('hidden')) {
                         this.classList.remove('hidden');
-                        const fieldIndex = fieldType === 'chinese' ? 0 : fieldType === 'pinyin' ? 1 : 2;
-                        this.textContent = words[index][fieldIndex];
+                    } else {
+                        this.classList.add('hidden');
                     }
                 });
             });
